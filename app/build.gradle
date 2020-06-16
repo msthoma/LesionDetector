@@ -36,4 +36,7 @@ dependencies {
 
     // CameraView library https://github.com/natario1/CameraView
     api 'com.otaliastudios:cameraview:2.6.2'
+
+    // Assent library https://github.com/afollestad/assent
+    implementation 'com.afollestad.assent:core:3.0.0-RC4'
 }
