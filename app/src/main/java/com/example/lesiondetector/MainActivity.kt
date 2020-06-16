@@ -14,15 +14,18 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-
         if (isAllGranted(Permission.CAMERA)) {
             text_view.text = "Camera permission granted"
         }
 
-        runWithPermissions(Permission.CAMERA) {
-            camera_view.visibility = View.VISIBLE
-            val cameraView: CameraView = camera_view
-            cameraView.setLifecycleOwner(this)
+        text_view.setOnClickListener {
+            runWithPermissions(Permission.CAMERA) {
+                camera_view.visibility = View.VISIBLE
+                val cameraView: CameraView = camera_view
+                cameraView.setLifecycleOwner(this)
+            }
         }
+
+
     }
 }
