@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">LesionDetector</string>
+    <string name="click_here_to_start">Click here to start</string>
 </resources>
