@@ -28,4 +28,14 @@
         app:cameraExperimental="true"
         app:cameraFacing="back" />
 
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/preview_frame"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHeight_percent="0.2"
+        app:layout_constraintWidth_percent="0.2" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
