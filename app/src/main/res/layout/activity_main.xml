@@ -23,6 +23,8 @@
         android:layout_height="match_parent"
         android:visibility="gone"
         app:cameraAudio="off"
+        app:cameraEngine="camera2"
+        app:cameraExperimental="true"
         app:cameraFacing="back" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
