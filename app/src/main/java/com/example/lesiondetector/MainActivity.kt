@@ -21,8 +21,14 @@ import org.tensorflow.lite.Interpreter
 import org.tensorflow.lite.support.common.FileUtil
 import org.tensorflow.lite.support.common.TensorProcessor
 import org.tensorflow.lite.support.common.ops.NormalizeOp
+import org.tensorflow.lite.support.image.ImageProcessor
 import org.tensorflow.lite.support.image.TensorImage
+import org.tensorflow.lite.support.image.ops.ResizeOp
+import org.tensorflow.lite.support.image.ops.ResizeWithCropOrPadOp
+import org.tensorflow.lite.support.image.ops.Rot90Op
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
+import kotlin.math.min
+import kotlin.properties.Delegates
 
 class MainActivity : AppCompatActivity() {
     private val IMAGE_MEAN = 0.0f
@@ -37,6 +43,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var outputProbabilityBuffer: TensorBuffer
     private lateinit var probabilityProcessor: TensorProcessor
 
+    private var imageSizeX by Delegates.notNull<Int>()
+    private var imageSizeY by Delegates.notNull<Int>()
+
     private val yuvBytes = arrayOfNulls<ByteArray>(3)
     private var rgbBytes: IntArray? = null
 
@@ -50,8 +59,8 @@ class MainActivity : AppCompatActivity() {
 
         val imageTensorIndex = 0
         val imageShape = tflite.getInputTensor(imageTensorIndex).shape()
-        val imageSizeY = imageShape[1]
-        val imageSizeX = imageShape[2]
+        imageSizeY = imageShape[1]
+        imageSizeX = imageShape[2]
 
         val imageDataType = tflite.getInputTensor(imageTensorIndex).dataType()
         val probabilityTensorIndex = 0
@@ -139,14 +148,32 @@ class MainActivity : AppCompatActivity() {
                             // then run classifier again in background below
                             // and then in let below display results in main thread
                         }.let {
+                            // this is in the Main thread
                             if (preview_frame.visibility == View.GONE) {
                                 preview_frame.visibility = View.VISIBLE
                             }
                             preview_frame.setImageBitmap(rgbBitmap)
 //                            Log.d("rgbBitmap", "w${rgbBitmap.width} h${rgbBitmap.height}")
+
+                            val cropSize = min(rgbBitmap.width, rgbBitmap.height)
+                            // in the background again, run TFLite classification
+                            withContext(Dispatchers.IO) {
+                                inputImageBuffer.load(rgbBitmap)
+                                val imageProcessor = ImageProcessor.Builder()
+                                    .add(ResizeWithCropOrPadOp(cropSize, cropSize))
+                                    .add(
+                                        ResizeOp(
+                                            imageSizeX, imageSizeY,
+                                            ResizeOp.ResizeMethod.NEAREST_NEIGHBOR
+                                        )
+                                    )
+                                    .add(Rot90Op(1))
+                                    .add(NormalizeOp(IMAGE_MEAN, IMAGE_STD))
+                                    .build()
+                                inputImageBuffer = imageProcessor.process(inputImageBuffer)
+                            }
                         }
                     }
-
                 }
             }
         }
