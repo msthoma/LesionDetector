@@ -26,6 +26,7 @@ import org.tensorflow.lite.support.image.TensorImage
 import org.tensorflow.lite.support.image.ops.ResizeOp
 import org.tensorflow.lite.support.image.ops.ResizeWithCropOrPadOp
 import org.tensorflow.lite.support.image.ops.Rot90Op
+import org.tensorflow.lite.support.label.TensorLabel
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
 import kotlin.math.min
 import kotlin.properties.Delegates
@@ -42,6 +43,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var inputImageBuffer: TensorImage
     private lateinit var outputProbabilityBuffer: TensorBuffer
     private lateinit var probabilityProcessor: TensorProcessor
+    private lateinit var labels: List<String>
 
     private var imageSizeX by Delegates.notNull<Int>()
     private var imageSizeY by Delegates.notNull<Int>()
@@ -55,7 +57,7 @@ class MainActivity : AppCompatActivity() {
         val tfliteModel = FileUtil.loadMappedFile(this, "cnn64RGB.tflite")
         tflite = Interpreter(tfliteModel, Interpreter.Options())
 
-        val labels = FileUtil.loadLabels(this, "cnn64RGB_labels.txt")
+        labels = FileUtil.loadLabels(this, "cnn64RGB_labels.txt")
 
         val imageTensorIndex = 0
         val imageShape = tflite.getInputTensor(imageTensorIndex).shape()
@@ -156,8 +158,10 @@ class MainActivity : AppCompatActivity() {
 //                            Log.d("rgbBitmap", "w${rgbBitmap.width} h${rgbBitmap.height}")
 
                             val cropSize = min(rgbBitmap.width, rgbBitmap.height)
+
                             // in the background again, run TFLite classification
-                            withContext(Dispatchers.IO) {
+                            val map = withContext(Dispatchers.IO) {
+                                // process input buffer
                                 inputImageBuffer.load(rgbBitmap)
                                 val imageProcessor = ImageProcessor.Builder()
                                     .add(ResizeWithCropOrPadOp(cropSize, cropSize))
@@ -171,7 +175,21 @@ class MainActivity : AppCompatActivity() {
                                     .add(NormalizeOp(IMAGE_MEAN, IMAGE_STD))
                                     .build()
                                 inputImageBuffer = imageProcessor.process(inputImageBuffer)
+
+                                // run classification
+                                tflite.run(
+                                    inputImageBuffer.buffer,
+                                    outputProbabilityBuffer.buffer.rewind()
+                                )
+
+                                // map labels and their predicted probabilities
+                                return@withContext TensorLabel(
+                                    labels,
+                                    probabilityProcessor.process(outputProbabilityBuffer)
+                                ).mapWithFloatValue
                             }
+
+                            Log.d("results", map.entries.toString())
                         }
                     }
                 }
