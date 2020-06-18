@@ -17,16 +17,54 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.tensorflow.lite.Interpreter
+import org.tensorflow.lite.support.common.FileUtil
+import org.tensorflow.lite.support.common.TensorProcessor
+import org.tensorflow.lite.support.common.ops.NormalizeOp
+import org.tensorflow.lite.support.image.TensorImage
+import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
 
 class MainActivity : AppCompatActivity() {
+    private val IMAGE_MEAN = 0.0f
+    private val IMAGE_STD = 255.0f
+    private val PROBABILITY_MEAN = 0.0f
+    private val PROBABILITY_STD = 1.0f
+
     lateinit var cameraView: CameraView
+    private lateinit var tflite: Interpreter
     private lateinit var rgbBitmap: Bitmap
+    private lateinit var inputImageBuffer: TensorImage
+    private lateinit var outputProbabilityBuffer: TensorBuffer
+    private lateinit var probabilityProcessor: TensorProcessor
+
     private val yuvBytes = arrayOfNulls<ByteArray>(3)
     private var rgbBytes: IntArray? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        val tfliteModel = FileUtil.loadMappedFile(this, "cnn64RGB.tflite")
+        tflite = Interpreter(tfliteModel, Interpreter.Options())
+
+        val labels = FileUtil.loadLabels(this, "cnn64RGB_labels.txt")
+
+        val imageTensorIndex = 0
+        val imageShape = tflite.getInputTensor(imageTensorIndex).shape()
+        val imageSizeY = imageShape[1]
+        val imageSizeX = imageShape[2]
+
+        val imageDataType = tflite.getInputTensor(imageTensorIndex).dataType()
+        val probabilityTensorIndex = 0
+        val probabilityShape = tflite.getOutputTensor(probabilityTensorIndex).shape()
+        val probabilityDataType = tflite.getOutputTensor(probabilityTensorIndex).dataType()
+
+        inputImageBuffer = TensorImage(imageDataType)
+
+        outputProbabilityBuffer =
+            TensorBuffer.createFixedSize(probabilityShape, probabilityDataType)
+
+        probabilityProcessor =
+            TensorProcessor.Builder().add(NormalizeOp(PROBABILITY_MEAN, PROBABILITY_STD)).build()
 
         if (!isAllGranted(Permission.CAMERA)) {
             askForPermissions(Permission.CAMERA) { result ->
