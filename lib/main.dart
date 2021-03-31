@@ -104,21 +104,42 @@ class TfliteCamera extends StatefulWidget {
 
 class _TfliteCameraState extends State<TfliteCamera> {
   CameraController controller;
+  bool isDetecting = false;
 
   @override
   void initState() {
     super.initState();
-    controller = CameraController(
-      widget.cameras[0],
-      ResolutionPreset.max,
-      enableAudio: false,
-    );
-    controller.initialize().then((_) {
-      if (!mounted) {
-        return;
-      }
-      setState(() {});
-    });
+
+    if (widget.cameras == null || widget.cameras.length < 1) {
+      print('No camera is found');
+    } else {
+      controller = CameraController(
+        widget.cameras[0],
+        ResolutionPreset.max,
+        enableAudio: false,
+      );
+      controller.initialize().then((_) {
+        if (!mounted) {
+          return;
+        }
+        setState(() {});
+        controller.startImageStream((CameraImage img) {
+          if (!isDetecting) {
+            Tflite.runModelOnFrame(
+              bytesList: img.planes.map((plane) => plane.bytes).toList(),
+              imageHeight: img.height,
+              imageWidth: img.width,
+              imageMean: 127.5,
+              imageStd: 127.5,
+              numResults: 1,
+            ).then((recognitions) {
+              print(recognitions);
+              isDetecting = false;
+            });
+          }
+        });
+      });
+    }
   }
 
   @override
