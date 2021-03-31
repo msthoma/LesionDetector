@@ -172,13 +172,22 @@ class _TfliteCameraState extends State<TfliteCamera> {
 
   @override
   Widget build(BuildContext context) {
+    Size screen = MediaQuery.of(context).size;
     return controller.value.isInitialized
         ? Stack(children: [
             CameraPreview(controller),
             Align(
               alignment: Alignment.bottomCenter,
-              child: Text(
-                  "Prediction: ${_recognitions != null ? _recognitions.last['label'] : ''}"),
+              child: Container(
+                height: screen.height / 10,
+                width: screen.width,
+                color: Colors.black,
+                child: Center(
+                  child: Text(_recognitions != null
+                      ? "Prediction: ${_recognitions.last['label']}"
+                      : "Analysing..."),
+                ),
+              ),
             ),
           ])
         : Center(child: CircularProgressIndicator());
