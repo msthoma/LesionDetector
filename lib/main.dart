@@ -1,5 +1,7 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:tflite/tflite.dart';
 
 List<CameraDescription> cameras;
 
@@ -25,6 +27,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
+/// Responsible for loading Tflite model.
 class InferencePage extends StatefulWidget {
   final List<CameraDescription> cameras;
 
@@ -35,6 +38,52 @@ class InferencePage extends StatefulWidget {
 }
 
 class _InferencePageState extends State<InferencePage> {
+  bool _modelLoaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    initModel();
+  }
+
+  void initModel() async {
+    try {
+      String res = await Tflite.loadModel(
+        model: "assets/cnn.tflite",
+        labels: "assets/cnn_labels.txt",
+      );
+      print("$res loading model!");
+      setState(() {
+        _modelLoaded = true;
+      });
+    } on PlatformException {
+      print('Failed to load model.');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text("Lesion detector")),
+      body: _modelLoaded
+          ? TfliteCamera(cameras: cameras)
+          : Center(child: CircularProgressIndicator()),
+    );
+  }
+}
+
+/// Responsible for loading camera and passing frames to Tflite model for
+/// analysis.
+class TfliteCamera extends StatefulWidget {
+  final List<CameraDescription> cameras;
+
+  const TfliteCamera({Key key, @required this.cameras}) : super(key: key);
+
+  @override
+  _TfliteCameraState createState() => _TfliteCameraState();
+}
+
+class _TfliteCameraState extends State<TfliteCamera> {
   CameraController controller;
 
   @override
