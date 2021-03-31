@@ -41,6 +41,14 @@ class _InferencePageState extends State<InferencePage> {
   ModelState _modelState = ModelState.loading;
 
   @override
+  void setState(VoidCallback fn) {
+    // check if still mounted before setting state
+    if (mounted) {
+      super.setState(fn);
+    }
+  }
+
+  @override
   void initState() {
     super.initState();
     initModel();
@@ -109,6 +117,14 @@ class _TfliteCameraState extends State<TfliteCamera> {
   bool isDetecting = false;
 
   @override
+  void setState(VoidCallback fn) {
+    // check if still mounted before setting state
+    if (mounted) {
+      super.setState(fn);
+    }
+  }
+
+  @override
   void initState() {
     super.initState();
 
@@ -122,9 +138,6 @@ class _TfliteCameraState extends State<TfliteCamera> {
         enableAudio: false, // this prevents app asking for audio permission
       );
       controller.initialize().then((_) {
-        if (!mounted) {
-          return;
-        }
         setState(() {});
 
         // image analysis with CNN starts here
