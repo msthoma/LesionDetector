@@ -1,6 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:camera/camera.dart';
 
-void main() {
+List<CameraDescription> cameras;
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  try {
+    cameras = await availableCameras();
+  } on CameraException catch (e) {
+    print("Error ${e.code}\nError msg: ${e.description}");
+  }
   runApp(MyApp());
 }
 
