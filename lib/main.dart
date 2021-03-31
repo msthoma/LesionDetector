@@ -38,7 +38,7 @@ class InferencePage extends StatefulWidget {
 }
 
 class _InferencePageState extends State<InferencePage> {
-  bool _modelLoaded = false;
+  ModelState _modelState = ModelState.loading;
 
   @override
   void initState() {
@@ -54,10 +54,17 @@ class _InferencePageState extends State<InferencePage> {
       );
       print("$res loading model!");
       setState(() {
-        _modelLoaded = true;
+        if (res == "success") {
+          _modelState = ModelState.loadSuccess;
+        } else {
+          _modelState = ModelState.loadError;
+        }
       });
     } on PlatformException {
       print('Failed to load model.');
+      setState(() {
+        _modelState = ModelState.loadError;
+      });
     }
   }
 
@@ -65,9 +72,21 @@ class _InferencePageState extends State<InferencePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text("Lesion detector")),
-      body: _modelLoaded
-          ? TfliteCamera(cameras: cameras)
-          : Center(child: CircularProgressIndicator()),
+      body: (() {
+        switch (_modelState) {
+          case ModelState.loading:
+            return Center(child: CircularProgressIndicator());
+            break;
+          case ModelState.loadSuccess:
+            return TfliteCamera(cameras: cameras);
+            break;
+          case ModelState.loadError:
+            return Center(child: Text("Couldn't load the TFlite model."));
+            break;
+          default:
+            return Center(child: Text("Something went wrong."));
+        }
+      }()),
     );
   }
 }
@@ -110,11 +129,11 @@ class _TfliteCameraState extends State<TfliteCamera> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text("Lesion detector")),
-      body: controller.value.isInitialized
-          ? CameraPreview(controller)
-          : Center(child: CircularProgressIndicator()),
-    );
+    return controller.value.isInitialized
+        ? CameraPreview(controller)
+        : Center(child: CircularProgressIndicator());
   }
 }
+
+/// Enum to keep track of whether the CNN model has been loaded or not.
+enum ModelState { loading, loadSuccess, loadError }
