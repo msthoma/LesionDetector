@@ -47,6 +47,7 @@ class _InferencePageState extends State<InferencePage> {
   }
 
   void initModel() async {
+    // CNN model is loaded here
     try {
       String res = await Tflite.loadModel(
         model: "assets/cnn.tflite",
@@ -73,6 +74,7 @@ class _InferencePageState extends State<InferencePage> {
     return Scaffold(
       appBar: AppBar(title: Text("Lesion detector")),
       body: (() {
+        // set app body depending on whether the CNN has been loaded
         switch (_modelState) {
           case ModelState.loading:
             return Center(child: CircularProgressIndicator());
@@ -113,22 +115,27 @@ class _TfliteCameraState extends State<TfliteCamera> {
     if (widget.cameras == null || widget.cameras.length < 1) {
       print('No camera is found');
     } else {
+      // create and initialize camera controller, to get access to camera stream
       controller = CameraController(
         widget.cameras[0],
         ResolutionPreset.max,
-        enableAudio: false,
+        enableAudio: false, // this prevents app asking for audio permission
       );
       controller.initialize().then((_) {
         if (!mounted) {
           return;
         }
         setState(() {});
+
+        // image analysis with CNN starts here
         controller.startImageStream((CameraImage img) {
           if (!isDetecting) {
             Tflite.runModelOnFrame(
               bytesList: img.planes.map((plane) => plane.bytes).toList(),
               imageHeight: img.height,
               imageWidth: img.width,
+              // by providing the values below for mean and SD, the img passed
+              // to model is converted to the range [-1, 1]
               imageMean: 127.5,
               imageStd: 127.5,
               numResults: 1,
