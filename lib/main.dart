@@ -114,6 +114,7 @@ class TfliteCamera extends StatefulWidget {
 
 class _TfliteCameraState extends State<TfliteCamera> {
   CameraController controller;
+  List<dynamic> _recognitions;
   bool isDetecting = false;
 
   @override
@@ -153,6 +154,7 @@ class _TfliteCameraState extends State<TfliteCamera> {
               imageStd: 127.5,
               numResults: 1,
             ).then((recognitions) {
+              setState(() => _recognitions = recognitions);
               print(recognitions);
               isDetecting = false;
             });
@@ -171,7 +173,14 @@ class _TfliteCameraState extends State<TfliteCamera> {
   @override
   Widget build(BuildContext context) {
     return controller.value.isInitialized
-        ? CameraPreview(controller)
+        ? Stack(children: [
+            CameraPreview(controller),
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Text(
+                  "Prediction: ${_recognitions != null ? _recognitions.last['label'] : ''}"),
+            ),
+          ])
         : Center(child: CircularProgressIndicator());
   }
 }
