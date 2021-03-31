@@ -115,6 +115,7 @@ class TfliteCamera extends StatefulWidget {
 class _TfliteCameraState extends State<TfliteCamera> {
   CameraController controller;
   List<dynamic> _recognitions;
+  List<int> _recTimes = [];
   bool isDetecting = false;
 
   @override
@@ -144,6 +145,7 @@ class _TfliteCameraState extends State<TfliteCamera> {
         // image analysis with CNN starts here
         controller.startImageStream((CameraImage img) {
           if (!isDetecting) {
+            int start = new DateTime.now().millisecondsSinceEpoch;
             Tflite.runModelOnFrame(
               bytesList: img.planes.map((plane) => plane.bytes).toList(),
               imageHeight: img.height,
@@ -154,8 +156,11 @@ class _TfliteCameraState extends State<TfliteCamera> {
               imageStd: 127.5,
               numResults: 1,
             ).then((recognitions) {
-              setState(() => _recognitions = recognitions);
-              print(recognitions);
+              setState(() {
+                _recognitions = recognitions;
+                _recTimes.add(DateTime.now().millisecondsSinceEpoch - start);
+              });
+              // print(recognitions);
               isDetecting = false;
             });
           }
@@ -174,23 +179,48 @@ class _TfliteCameraState extends State<TfliteCamera> {
   Widget build(BuildContext context) {
     Size screen = MediaQuery.of(context).size;
     return controller.value.isInitialized
-        ? Stack(children: [
-            CameraPreview(controller),
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: Container(
-                height: screen.height / 10,
-                width: screen.width,
-                color: Colors.black,
-                child: Center(
-                  child: Text(_recognitions != null
-                      ? "Prediction: ${_recognitions.last['label']}"
-                      : "Analysing..."),
+        ? Stack(
+            children: [
+              CameraPreview(controller),
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: Container(
+                  height: screen.height / 10,
+                  width: screen.width,
+                  color: Colors.black,
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: _recognitions != null
+                          ? [
+                              Text("Prediction: ${_recognitions.last['label']}",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  )),
+                              Text("Last analysis took: ${_recTimes.last}ms"),
+                              Text("Analysing ${_calculateFPS()} FPS"),
+                            ]
+                          : [Text("Analysing...")],
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ])
+            ],
+          )
         : Center(child: CircularProgressIndicator());
+  }
+
+  String _calculateFPS() {
+    if (_recTimes.isNotEmpty) {
+      int win = 10; // average over 10 previous analysis times
+      var lastX = _recTimes
+          .sublist(_recTimes.length - win <= 0 ? 0 : _recTimes.length - win);
+      double fps = 1000 / (lastX.reduce((a, b) => a + b) / lastX.length);
+      return fps.toStringAsFixed(1);
+    } else {
+      return "0";
+    }
   }
 }
 
