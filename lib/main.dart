@@ -37,7 +37,8 @@ class InferencePage extends StatefulWidget {
   _InferencePageState createState() => _InferencePageState();
 }
 
-class _InferencePageState extends State<InferencePage> {
+class _InferencePageState extends State<InferencePage>
+    with WidgetsBindingObserver {
   ModelState _modelState = ModelState.loading;
   InferState _inferState = InferState.running;
 
@@ -52,7 +53,35 @@ class _InferencePageState extends State<InferencePage> {
   @override
   void initState() {
     super.initState();
+    // observe for lifecycle changes, to pause CNN inference if app state changes
+    // https://api.flutter.dev/flutter/widgets/WidgetsBindingObserver-class.html
+    WidgetsBinding.instance.addObserver(this);
+    // initialise model
     initModel();
+  }
+
+  @override
+  void dispose() {
+    // remove AppLifecycleState observer
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    print("AppLifecycleState change: $state");
+    if ([AppLifecycleState.inactive, AppLifecycleState.paused]
+        .contains(state)) {
+      // pause analysis if app is put in background or exited
+      setState(() {
+        _inferState = InferState.paused;
+      });
+    } else if (state == AppLifecycleState.resumed) {
+      // restart analysis if app comes to the foreground again
+      setState(() {
+        _inferState = InferState.running;
+      });
+    }
   }
 
   void initModel() async {
