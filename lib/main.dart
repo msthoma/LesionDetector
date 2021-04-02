@@ -39,6 +39,7 @@ class InferencePage extends StatefulWidget {
 
 class _InferencePageState extends State<InferencePage> {
   ModelState _modelState = ModelState.loading;
+  InferState _inferState = InferState.running;
 
   @override
   void setState(VoidCallback fn) {
@@ -80,21 +81,42 @@ class _InferencePageState extends State<InferencePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Lesion detector")),
+      appBar: AppBar(
+        title: Text("Lesion detector"),
+        backgroundColor: ThemeData.dark().primaryColor.withOpacity(0.2),
+      ),
+      floatingActionButton: FloatingActionButton(
+        child: _inferState == InferState.running
+            ? Icon(Icons.pause)
+            : Icon(Icons.play_arrow),
+        onPressed: () {
+          setState(() {
+            if (_inferState == InferState.running) {
+              _inferState = InferState.paused;
+            } else {
+              _inferState = InferState.running;
+            }
+          });
+        },
+      ),
       body: (() {
-        // set app body depending on whether the CNN has been loaded
-        switch (_modelState) {
-          case ModelState.loading:
-            return Center(child: CircularProgressIndicator());
-            break;
-          case ModelState.loadSuccess:
-            return TfliteCamera(cameras: cameras);
-            break;
-          case ModelState.loadError:
-            return Center(child: Text("Couldn't load the TFlite model."));
-            break;
-          default:
-            return Center(child: Text("Something went wrong."));
+        if (_inferState == InferState.running) {
+          // set app body depending on whether the CNN has been loaded or not
+          switch (_modelState) {
+            case ModelState.loading:
+              return Center(child: CircularProgressIndicator());
+              break;
+            case ModelState.loadSuccess:
+              return TfliteCamera(cameras: cameras);
+              break;
+            case ModelState.loadError:
+              return Center(child: Text("Couldn't load the TFlite model."));
+              break;
+            default:
+              return Center(child: Text("Something went wrong."));
+          }
+        } else {
+          return Center(child: Text("Analysis paused, tap ▶ to start again"));
         }
       }()),
     );
@@ -226,3 +248,6 @@ class _TfliteCameraState extends State<TfliteCamera> {
 
 /// Enum to keep track of whether the CNN model has been loaded or not.
 enum ModelState { loading, loadSuccess, loadError }
+
+/// Enum to allow pausing/starting the inference process.
+enum InferState { running, paused }
