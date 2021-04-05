@@ -1,3 +1,5 @@
+[![app build](https://github.com/msthoma/LesionDetector/actions/workflows/flutter-ci.yml/badge.svg?branch=master)](https://github.com/msthoma/LesionDetector/actions/workflows/flutter-ci.yml)
+
 # Lesion detector app
 
 A smartphone app built with Flutter, capable of detecting skin cancer lesions using Computer Vision. 
