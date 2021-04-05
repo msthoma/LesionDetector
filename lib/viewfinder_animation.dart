@@ -55,6 +55,7 @@ class _ViewfinderAnimationState extends State<ViewfinderAnimation>
   }
 }
 
+/// Custom shape for a viewfinder frame, essentially the 4 corners of a square.
 class ViewfinderPainter extends CustomPainter {
   final Color color;
 
