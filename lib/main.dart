@@ -251,12 +251,12 @@ class _TfliteCameraState extends State<TfliteCamera> {
               Align(
                 alignment: Alignment.bottomCenter,
                 child: Container(
-                  height: screen.height / 10,
                   width: screen.width,
                   color: Colors.black,
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: _recognitions != null
                           ? [
