@@ -121,13 +121,15 @@ class _InferencePageState extends State<InferencePage>
             ? Icon(Icons.pause)
             : Icon(Icons.play_arrow),
         onPressed: () {
-          setState(() {
-            if (_inferState == InferState.running) {
-              _inferState = InferState.paused;
-            } else {
-              _inferState = InferState.running;
-            }
-          });
+          setState(
+            () {
+              if (_inferState == InferState.running) {
+                _inferState = InferState.paused;
+              } else {
+                _inferState = InferState.running;
+              }
+            },
+          );
         },
       ),
       body: (() {
@@ -192,33 +194,40 @@ class _TfliteCameraState extends State<TfliteCamera> {
         ResolutionPreset.max,
         enableAudio: false, // this prevents app asking for audio permission
       );
-      controller.initialize().then((_) {
-        setState(() {});
+      controller.initialize().then(
+        (_) {
+          setState(() {});
 
-        // image analysis with CNN starts here
-        controller.startImageStream((CameraImage img) {
-          if (!isDetecting) {
-            int start = new DateTime.now().millisecondsSinceEpoch;
-            Tflite.runModelOnFrame(
-              bytesList: img.planes.map((plane) => plane.bytes).toList(),
-              imageHeight: img.height,
-              imageWidth: img.width,
-              // by providing the values below for mean and SD, the img passed
-              // to model is converted to the range [-1, 1]
-              imageMean: 127.5,
-              imageStd: 127.5,
-              numResults: 1,
-            ).then((recognitions) {
-              setState(() {
-                _recognitions = recognitions;
-                _recTimes.add(DateTime.now().millisecondsSinceEpoch - start);
-              });
-              // print(recognitions);
-              isDetecting = false;
-            });
-          }
-        });
-      });
+          // image analysis with CNN starts here
+          controller.startImageStream(
+            (CameraImage img) {
+              if (!isDetecting) {
+                int start = new DateTime.now().millisecondsSinceEpoch;
+                Tflite.runModelOnFrame(
+                  bytesList: img.planes.map((plane) => plane.bytes).toList(),
+                  imageHeight: img.height,
+                  imageWidth: img.width,
+                  // by providing the values below for mean and SD, the img
+                  // passed to the model is converted to the range [-1, 1]
+                  imageMean: 127.5,
+                  imageStd: 127.5,
+                  numResults: 1,
+                ).then(
+                  (recognitions) {
+                    setState(() {
+                      _recognitions = recognitions;
+                      _recTimes
+                          .add(DateTime.now().millisecondsSinceEpoch - start);
+                    });
+                    // print(recognitions);
+                    isDetecting = false;
+                  },
+                );
+              }
+            },
+          );
+        },
+      );
     }
   }
 
