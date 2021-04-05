@@ -21,7 +21,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Lesion Detector',
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark(),
       home: InferencePage(cameras: cameras),
@@ -214,12 +214,13 @@ class _TfliteCameraState extends State<TfliteCamera> {
                   numResults: 1,
                 ).then(
                   (recognitions) {
-                    setState(() {
-                      _recognitions = recognitions;
-                      _recTimes
-                          .add(DateTime.now().millisecondsSinceEpoch - start);
-                    });
-                    // print(recognitions);
+                    setState(
+                      () {
+                        _recognitions = recognitions;
+                        _recTimes
+                            .add(DateTime.now().millisecondsSinceEpoch - start);
+                      },
+                    );
                     isDetecting = false;
                   },
                 );
