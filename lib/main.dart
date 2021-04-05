@@ -243,7 +243,7 @@ class _TfliteCameraState extends State<TfliteCamera> {
     return controller.value.isInitialized
         ? Stack(
             children: [
-              CameraPreview(controller),
+              Center(child: CameraPreview(controller)),
               Align(
                 alignment: Alignment.center,
                 child: ViewfinderAnimation(size: Size.square(screen.width)),
