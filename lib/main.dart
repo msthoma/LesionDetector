@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/painting.dart';
@@ -261,10 +263,9 @@ class _TfliteCameraState extends State<TfliteCamera> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: _recognitions != null
                           ? [
-                              Text("Prediction: ${_recognitions.last['label']}",
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                  )),
+                              Text(_formatPrediction(_recognitions.last),
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.bold)),
                               Text("Last analysis took: ${_recTimes.last}ms"),
                               Text("Analysing ${_calculateFPS()} FPS"),
                             ]
@@ -277,6 +278,9 @@ class _TfliteCameraState extends State<TfliteCamera> {
           )
         : Center(child: CircularProgressIndicator());
   }
+
+  String _formatPrediction(LinkedHashMap recs) =>
+      "Prediction: ${recs['label']} (${(recs['confidence'] * 100).toStringAsFixed(1)}%)";
 
   String _calculateFPS() {
     if (_recTimes.isNotEmpty) {
