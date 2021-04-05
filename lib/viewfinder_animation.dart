@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
 /// Shows an animated viewfinder frame.
+///
+/// Implementation inspired by Flutter Spinkit's [loading indicators](https://github.com/jogboms/flutter_spinkit/tree/master/lib/src).
 class ViewfinderAnimation extends StatefulWidget {
   final Size size;
   final Duration duration;
