@@ -1,4 +1,4 @@
-# Lesion detector
+# Lesion detector app
 
 A smartphone app built with Flutter, capable of detecting skin cancer lesions using Computer Vision. 
 To do so, the app incorporates a Convolutional Neural Network trained with the 
