@@ -1,6 +1,8 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/painting.dart';
 import 'package:flutter/services.dart';
+import 'package:lesion_detector/viewfinder_animation.dart';
 import 'package:tflite/tflite.dart';
 
 List<CameraDescription> cameras;
@@ -233,6 +235,10 @@ class _TfliteCameraState extends State<TfliteCamera> {
         ? Stack(
             children: [
               CameraPreview(controller),
+              Align(
+                alignment: Alignment.center,
+                child: ViewfinderAnimation(size: Size.square(screen.width)),
+              ),
               Align(
                 alignment: Alignment.bottomCenter,
                 child: Container(
