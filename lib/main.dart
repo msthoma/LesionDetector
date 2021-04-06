@@ -118,6 +118,7 @@ class _InferencePageState extends State<InferencePage>
         title: Text("Lesion detector"),
         backgroundColor: ThemeData.dark().primaryColor.withOpacity(0.2),
       ),
+      backgroundColor: Colors.black,
       floatingActionButton: FloatingActionButton(
         tooltip: _inferState == InferState.running
             ? "Pause detection"
@@ -151,7 +152,7 @@ class _InferencePageState extends State<InferencePage>
               return Center(child: Text("Something went wrong."));
           }
         } else {
-          return Center(child: Text("Analysis paused, tap ▶ to start again"));
+          return Center(child: Text("Detection paused, tap ▶ to restart"));
         }
       }()),
     );
