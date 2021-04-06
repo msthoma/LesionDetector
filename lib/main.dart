@@ -240,44 +240,46 @@ class _TfliteCameraState extends State<TfliteCamera> {
   @override
   Widget build(BuildContext context) {
     Size screen = MediaQuery.of(context).size;
-    return controller.value.isInitialized
-        ? Stack(
-            children: [
-              Center(child: CameraPreview(controller)),
-              Align(
-                alignment: Alignment.center,
-                child: ViewfinderAnimation(size: Size.square(screen.width)),
+
+    if (!controller.value.isInitialized) {
+      return Center(child: CircularProgressIndicator());
+    }
+
+    return Stack(
+      children: [
+        Center(child: CameraPreview(controller)),
+        Align(
+          alignment: Alignment.center,
+          child: ViewfinderAnimation(size: Size.square(screen.shortestSide)),
+        ),
+        Align(
+          alignment: Alignment.bottomCenter,
+          child: Container(
+            width: screen.width,
+            color: Colors.black,
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: _recognitions != null
+                    ? [
+                        Text(_formatPrediction(_recognitions!.last),
+                            style: TextStyle(fontWeight: FontWeight.bold)),
+                        Text("Last analysis took: ${_recTimes.last}ms"),
+                        Text("Analysing ${_calculateFPS()} FPS"),
+                      ]
+                    : [Text("Analysing...")],
               ),
-              Align(
-                alignment: Alignment.bottomCenter,
-                child: Container(
-                  width: screen.width,
-                  color: Colors.black,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: _recognitions != null
-                          ? [
-                              Text(_formatPrediction(_recognitions!.last),
-                                  style:
-                                      TextStyle(fontWeight: FontWeight.bold)),
-                              Text("Last analysis took: ${_recTimes.last}ms"),
-                              Text("Analysing ${_calculateFPS()} FPS"),
-                            ]
-                          : [Text("Analysing...")],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          )
-        : Center(child: CircularProgressIndicator());
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
-  String _formatPrediction(LinkedHashMap recs) =>
-      "Prediction: ${recs['label']} (${(recs['confidence'] * 100).toStringAsFixed(1)}%)";
+  String _formatPrediction(LinkedHashMap recs) => "Prediction: ${recs['label']}"
+      " (${(recs['confidence'] * 100).toStringAsFixed(1)}%)";
 
   String _calculateFPS() {
     if (_recTimes.isNotEmpty) {
