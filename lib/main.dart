@@ -256,7 +256,7 @@ class _TfliteCameraState extends State<TfliteCamera> {
           alignment: Alignment.bottomCenter,
           child: Container(
             width: screen.width,
-            color: Colors.black,
+            color: Colors.black.withOpacity(0.4),
             child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: Column(
