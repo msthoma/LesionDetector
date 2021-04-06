@@ -10,8 +10,8 @@ class ViewfinderAnimation extends StatefulWidget {
   final Color color;
 
   const ViewfinderAnimation({
-    Key key,
-    this.size,
+    Key? key,
+    required this.size,
     this.duration = const Duration(milliseconds: 1200),
     this.color = Colors.white,
   }) : super(key: key);
@@ -22,8 +22,8 @@ class ViewfinderAnimation extends StatefulWidget {
 
 class _ViewfinderAnimationState extends State<ViewfinderAnimation>
     with SingleTickerProviderStateMixin {
-  AnimationController _controller;
-  Animation<double> _animation;
+  late AnimationController _controller;
+  late Animation<double> _animation;
 
   @override
   void dispose() {
@@ -55,10 +55,11 @@ class _ViewfinderAnimationState extends State<ViewfinderAnimation>
   }
 }
 
+/// Custom shape for a viewfinder frame, essentially the 4 corners of a square.
 class ViewfinderPainter extends CustomPainter {
   final Color color;
 
-  ViewfinderPainter({this.color});
+  ViewfinderPainter({required this.color});
 
   @override
   void paint(Canvas canvas, Size size) {

@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/painting.dart';
@@ -5,7 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:lesion_detector/viewfinder_animation.dart';
 import 'package:tflite/tflite.dart';
 
-List<CameraDescription> cameras;
+List<CameraDescription> cameras = [];
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,7 +35,7 @@ class MyApp extends StatelessWidget {
 class InferencePage extends StatefulWidget {
   final List<CameraDescription> cameras;
 
-  const InferencePage({Key key, @required this.cameras}) : super(key: key);
+  const InferencePage({Key? key, required this.cameras}) : super(key: key);
 
   @override
   _InferencePageState createState() => _InferencePageState();
@@ -57,7 +59,7 @@ class _InferencePageState extends State<InferencePage>
     super.initState();
     // observe for lifecycle changes, to pause CNN inference if app state changes
     // https://api.flutter.dev/flutter/widgets/WidgetsBindingObserver-class.html
-    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance?.addObserver(this);
     // initialise model
     initModel();
   }
@@ -65,7 +67,7 @@ class _InferencePageState extends State<InferencePage>
   @override
   void dispose() {
     // remove AppLifecycleState observer
-    WidgetsBinding.instance.removeObserver(this);
+    WidgetsBinding.instance?.removeObserver(this);
     super.dispose();
   }
 
@@ -89,7 +91,7 @@ class _InferencePageState extends State<InferencePage>
   void initModel() async {
     // CNN model is loaded here
     try {
-      String res = await Tflite.loadModel(
+      String? res = await Tflite.loadModel(
         model: "assets/cnn.tflite",
         labels: "assets/cnn_labels.txt",
       );
@@ -114,9 +116,14 @@ class _InferencePageState extends State<InferencePage>
     return Scaffold(
       appBar: AppBar(
         title: Text("Lesion detector"),
-        backgroundColor: ThemeData.dark().primaryColor.withOpacity(0.2),
+        backgroundColor: Colors.black.withOpacity(0.5),
       ),
+      backgroundColor: Colors.black,
+      extendBodyBehindAppBar: true,
       floatingActionButton: FloatingActionButton(
+        tooltip: _inferState == InferState.running
+            ? "Pause detection"
+            : "Restart detection",
         child: _inferState == InferState.running
             ? Icon(Icons.pause)
             : Icon(Icons.play_arrow),
@@ -138,18 +145,15 @@ class _InferencePageState extends State<InferencePage>
           switch (_modelState) {
             case ModelState.loading:
               return Center(child: CircularProgressIndicator());
-              break;
             case ModelState.loadSuccess:
               return TfliteCamera(cameras: cameras);
-              break;
             case ModelState.loadError:
               return Center(child: Text("Couldn't load the TFlite model."));
-              break;
             default:
               return Center(child: Text("Something went wrong."));
           }
         } else {
-          return Center(child: Text("Analysis paused, tap ▶ to start again"));
+          return Center(child: Text("Detection paused, tap ▶ to restart"));
         }
       }()),
     );
@@ -161,15 +165,15 @@ class _InferencePageState extends State<InferencePage>
 class TfliteCamera extends StatefulWidget {
   final List<CameraDescription> cameras;
 
-  const TfliteCamera({Key key, @required this.cameras}) : super(key: key);
+  const TfliteCamera({Key? key, required this.cameras}) : super(key: key);
 
   @override
   _TfliteCameraState createState() => _TfliteCameraState();
 }
 
 class _TfliteCameraState extends State<TfliteCamera> {
-  CameraController controller;
-  List<dynamic> _recognitions;
+  late CameraController controller;
+  List<dynamic>? _recognitions;
   List<int> _recTimes = [];
   bool isDetecting = false;
 
@@ -185,7 +189,7 @@ class _TfliteCameraState extends State<TfliteCamera> {
   void initState() {
     super.initState();
 
-    if (widget.cameras == null || widget.cameras.length < 1) {
+    if (widget.cameras.isEmpty) {
       print('No camera is found');
     } else {
       // create and initialize camera controller, to get access to camera stream
@@ -234,49 +238,56 @@ class _TfliteCameraState extends State<TfliteCamera> {
 
   @override
   void dispose() {
-    controller?.dispose();
+    controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     Size screen = MediaQuery.of(context).size;
-    return controller.value.isInitialized
-        ? Stack(
-            children: [
-              CameraPreview(controller),
-              Align(
-                alignment: Alignment.center,
-                child: ViewfinderAnimation(size: Size.square(screen.width)),
+
+    if (!controller.value.isInitialized) {
+      return Center(child: CircularProgressIndicator());
+    }
+
+    return Stack(
+      children: [
+        OverflowBox(
+            minHeight: screen.height,
+            maxHeight: screen.height,
+            child: CameraPreview(controller)),
+        Align(
+          alignment: Alignment.center,
+          child: ViewfinderAnimation(size: Size.square(screen.shortestSide)),
+        ),
+        Align(
+          alignment: Alignment.bottomCenter,
+          child: Container(
+            width: screen.width,
+            color: Colors.black.withOpacity(0.5),
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: _recognitions != null
+                    ? [
+                        Text(_formatPrediction(_recognitions!.last),
+                            style: TextStyle(fontWeight: FontWeight.bold)),
+                        Text("Last analysis took: ${_recTimes.last}ms"),
+                        Text("Analysing ${_calculateFPS()} FPS"),
+                      ]
+                    : [Text("Analysing...")],
               ),
-              Align(
-                alignment: Alignment.bottomCenter,
-                child: Container(
-                  height: screen.height / 10,
-                  width: screen.width,
-                  color: Colors.black,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: _recognitions != null
-                          ? [
-                              Text("Prediction: ${_recognitions.last['label']}",
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                  )),
-                              Text("Last analysis took: ${_recTimes.last}ms"),
-                              Text("Analysing ${_calculateFPS()} FPS"),
-                            ]
-                          : [Text("Analysing...")],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          )
-        : Center(child: CircularProgressIndicator());
+            ),
+          ),
+        ),
+      ],
+    );
   }
+
+  String _formatPrediction(LinkedHashMap recs) => "Prediction: ${recs['label']}"
+      " (${(recs['confidence'] * 100).toStringAsFixed(1)}%)";
 
   String _calculateFPS() {
     if (_recTimes.isNotEmpty) {
