@@ -116,9 +116,10 @@ class _InferencePageState extends State<InferencePage>
     return Scaffold(
       appBar: AppBar(
         title: Text("Lesion detector"),
-        backgroundColor: ThemeData.dark().primaryColor.withOpacity(0.2),
+        backgroundColor: Colors.black.withOpacity(0.5),
       ),
       backgroundColor: Colors.black,
+      extendBodyBehindAppBar: true,
       floatingActionButton: FloatingActionButton(
         tooltip: _inferState == InferState.running
             ? "Pause detection"
@@ -251,7 +252,10 @@ class _TfliteCameraState extends State<TfliteCamera> {
 
     return Stack(
       children: [
-        Center(child: CameraPreview(controller)),
+        OverflowBox(
+            minHeight: screen.height,
+            maxHeight: screen.height,
+            child: CameraPreview(controller)),
         Align(
           alignment: Alignment.center,
           child: ViewfinderAnimation(size: Size.square(screen.shortestSide)),
@@ -260,7 +264,7 @@ class _TfliteCameraState extends State<TfliteCamera> {
           alignment: Alignment.bottomCenter,
           child: Container(
             width: screen.width,
-            color: Colors.black.withOpacity(0.4),
+            color: Colors.black.withOpacity(0.5),
             child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: Column(
