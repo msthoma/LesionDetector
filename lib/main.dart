@@ -119,6 +119,9 @@ class _InferencePageState extends State<InferencePage>
         backgroundColor: ThemeData.dark().primaryColor.withOpacity(0.2),
       ),
       floatingActionButton: FloatingActionButton(
+        tooltip: _inferState == InferState.running
+            ? "Pause detection"
+            : "Restart detection",
         child: _inferState == InferState.running
             ? Icon(Icons.pause)
             : Icon(Icons.play_arrow),
