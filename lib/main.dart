@@ -14,7 +14,7 @@ Future<void> main() async {
   try {
     cameras = await availableCameras();
   } on CameraException catch (e) {
-    print("Error ${e.code}\nError msg: ${e.description}");
+    print('Error ${e.code}\nError msg: ${e.description}');
   }
   runApp(MyApp());
 }
@@ -73,7 +73,7 @@ class _InferencePageState extends State<InferencePage>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    print("AppLifecycleState change: $state");
+    print('AppLifecycleState change: $state');
     if ([AppLifecycleState.inactive, AppLifecycleState.paused]
         .contains(state)) {
       // pause analysis if app is put in background or exited
@@ -91,13 +91,13 @@ class _InferencePageState extends State<InferencePage>
   void initModel() async {
     // CNN model is loaded here
     try {
-      String? res = await Tflite.loadModel(
-        model: "assets/cnn.tflite",
-        labels: "assets/cnn_labels.txt",
+      var res = await Tflite.loadModel(
+        model: 'assets/cnn.tflite',
+        labels: 'assets/cnn_labels.txt',
       );
-      print("$res loading model!");
+      print('$res loading model!');
       setState(() {
-        if (res == "success") {
+        if (res == 'success') {
           _modelState = ModelState.loadSuccess;
         } else {
           _modelState = ModelState.loadError;
@@ -115,18 +115,15 @@ class _InferencePageState extends State<InferencePage>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Lesion detector"),
+        title: Text('Lesion detector'),
         backgroundColor: Colors.black.withOpacity(0.5),
       ),
       backgroundColor: Colors.black,
       extendBodyBehindAppBar: true,
       floatingActionButton: FloatingActionButton(
         tooltip: _inferState == InferState.running
-            ? "Pause detection"
-            : "Restart detection",
-        child: _inferState == InferState.running
-            ? Icon(Icons.pause)
-            : Icon(Icons.play_arrow),
+            ? 'Pause detection'
+            : 'Restart detection',
         onPressed: () {
           setState(
             () {
@@ -138,6 +135,9 @@ class _InferencePageState extends State<InferencePage>
             },
           );
         },
+        child: _inferState == InferState.running
+            ? Icon(Icons.pause)
+            : Icon(Icons.play_arrow),
       ),
       body: (() {
         if (_inferState == InferState.running) {
@@ -150,10 +150,10 @@ class _InferencePageState extends State<InferencePage>
             case ModelState.loadError:
               return Center(child: Text("Couldn't load the TFlite model."));
             default:
-              return Center(child: Text("Something went wrong."));
+              return Center(child: Text('Something went wrong.'));
           }
         } else {
-          return Center(child: Text("Detection paused, tap ▶ to restart"));
+          return Center(child: Text('Detection paused, tap ▶ to restart'));
         }
       }()),
     );
@@ -174,7 +174,7 @@ class TfliteCamera extends StatefulWidget {
 class _TfliteCameraState extends State<TfliteCamera> {
   late CameraController controller;
   List<dynamic>? _recognitions;
-  List<int> _recTimes = [];
+  final List<int> _recTimes = [];
   bool isDetecting = false;
 
   @override
@@ -206,7 +206,7 @@ class _TfliteCameraState extends State<TfliteCamera> {
           controller.startImageStream(
             (CameraImage img) {
               if (!isDetecting) {
-                int start = new DateTime.now().millisecondsSinceEpoch;
+                var start = DateTime.now().millisecondsSinceEpoch;
                 Tflite.runModelOnFrame(
                   bytesList: img.planes.map((plane) => plane.bytes).toList(),
                   imageHeight: img.height,
@@ -244,7 +244,7 @@ class _TfliteCameraState extends State<TfliteCamera> {
 
   @override
   Widget build(BuildContext context) {
-    Size screen = MediaQuery.of(context).size;
+    var screen = MediaQuery.of(context).size;
 
     if (!controller.value.isInitialized) {
       return Center(child: CircularProgressIndicator());
@@ -274,10 +274,10 @@ class _TfliteCameraState extends State<TfliteCamera> {
                     ? [
                         Text(_formatPrediction(_recognitions!.last),
                             style: TextStyle(fontWeight: FontWeight.bold)),
-                        Text("Last analysis took: ${_recTimes.last}ms"),
-                        Text("Analysing ${_calculateFPS()} FPS"),
+                        Text('Last analysis took: ${_recTimes.last}ms'),
+                        Text('Analysing ${_calculateFPS()} FPS'),
                       ]
-                    : [Text("Analysing...")],
+                    : [Text('Analysing...')],
               ),
             ),
           ),
@@ -291,13 +291,13 @@ class _TfliteCameraState extends State<TfliteCamera> {
 
   String _calculateFPS() {
     if (_recTimes.isNotEmpty) {
-      int win = 10; // average over 10 previous analysis times
+      var win = 10; // average over 10 previous analysis times
       var lastX = _recTimes
           .sublist(_recTimes.length - win <= 0 ? 0 : _recTimes.length - win);
-      double fps = 1000 / (lastX.reduce((a, b) => a + b) / lastX.length);
+      var fps = 1000 / (lastX.reduce((a, b) => a + b) / lastX.length);
       return fps.toStringAsFixed(1);
     } else {
-      return "0";
+      return '0';
     }
   }
 }

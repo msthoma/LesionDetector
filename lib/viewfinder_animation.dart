@@ -66,31 +66,31 @@ class ViewfinderPainter extends CustomPainter {
     var w = size.width;
     var h = size.height;
 
-    Paint paint = Paint()
+    var paint = Paint()
       ..color = color
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2;
 
     // top left
-    Path path_0 = Path()
+    var path_0 = Path()
       ..moveTo(w * 1 / 7, h * 2 / 7)
       ..lineTo(w * 1 / 7, h * 1 / 7)
       ..lineTo(w * 2 / 7, h * 1 / 7);
 
     // top right
-    Path path_1 = Path()
+    var path_1 = Path()
       ..moveTo(w * 5 / 7, h * 1 / 7)
       ..lineTo(w * 6 / 7, h * 1 / 7)
       ..lineTo(w * 6 / 7, h * 2 / 7);
 
     // bottom right
-    Path path_2 = Path()
+    var path_2 = Path()
       ..moveTo(w * 6 / 7, h * 5 / 7)
       ..lineTo(w * 6 / 7, h * 6 / 7)
       ..lineTo(w * 5 / 7, h * 6 / 7);
 
     // bottom left
-    Path path_3 = Path()
+    var path_3 = Path()
       ..moveTo(w * 2 / 7, h * 6 / 7)
       ..lineTo(w * 1 / 7, h * 6 / 7)
       ..lineTo(w * 1 / 7, h * 5 / 7);
